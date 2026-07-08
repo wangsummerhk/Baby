@@ -1,0 +1,2437 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#4f7cff" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="屁宝学业生涯" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="format-detection" content="telephone=no" />
+<meta name="description" content="屁宝学业生涯 - 记录宝宝学校申请与反馈的小工具" />
+<!-- LeanCloud SDK（国内访问快，免费层够家庭使用） -->
+<script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.15.2/dist/av-min.js"></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%92%3C/text%3E%3C/svg%3E" />
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%92%3C/text%3E%3C/svg%3E" />
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22%E5%B1%81%E5%AE%9D%E5%AD%A6%E4%B8%9A%E7%94%9F%E6%B6%AF%22%2C%22short_name%22%3A%22%E5%B1%81%E5%AE%9D%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f5f7fb%22%2C%22theme_color%22%3A%22%234f7cff%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2527http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2527%2520viewBox%253D%25270%25200%2520100%2520100%2527%253E%253Ctext%2520y%253D%2527.9em%2527%2520font-size%253D%252790%2527%253E%25F0%259F%258E%2592%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D" />
+<title>屁宝学业生涯 · 择校记录</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --primary: #4f7cff;
+    --primary-dark: #3a5fd6;
+    --primary-light: #eaf0ff;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --gray-50: #f8fafc;
+    --gray-100: #f1f5f9;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e1;
+    --gray-400: #94a3b8;
+    --gray-500: #64748b;
+    --gray-600: #475569;
+    --gray-700: #334155;
+    --gray-800: #1e293b;
+    --gray-900: #0f172a;
+    --bg: #f5f7fb;
+    --card: #ffffff;
+    --shadow-sm: 0 1px 2px rgba(15,23,42,0.05);
+    --shadow: 0 2px 8px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
+    --shadow-lg: 0 8px 24px rgba(15,23,42,0.08);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-lg: 16px;
+  }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--gray-800);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Layout */
+  .app { min-height: 100vh; display: flex; flex-direction: column; }
+  .header {
+    background: linear-gradient(135deg, #4f7cff 0%, #6f9bff 100%);
+    color: white;
+    padding: 16px 20px;
+    /* 留出顶部状态栏/灵动岛的空间 */
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    box-shadow: var(--shadow);
+    position: sticky; top: 0; z-index: 50;
+  }
+  .header-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .header h1 { margin: 0; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .header h1 .emoji { font-size: 22px; }
+  .header-sub { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+  .header-actions { display: flex; gap: 8px; }
+  .icon-btn {
+    background: rgba(255,255,255,0.18);
+    color: white;
+    border: none;
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    transition: background 0.15s;
+  }
+  .icon-btn:hover { background: rgba(255,255,255,0.28); }
+  .icon-btn:active { transform: scale(0.95); }
+
+  /* Sync status dot */
+  .sync-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #94a3b8;
+    display: inline-block;
+    margin-right: 4px;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.25);
+  }
+
+  /* Sync modal */
+  .sync-status-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: var(--gray-50);
+    border-radius: var(--radius-sm);
+    margin-bottom: 14px;
+    font-size: 13px;
+  }
+  .sync-status-row .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--gray-400);
+  }
+  .sync-status-row .dot.local   { background: #94a3b8; }
+  .sync-status-row .dot.syncing { background: #f59e0b; }
+  .sync-status-row .dot.synced  { background: #10b981; }
+  .sync-status-row .dot.error   { background: #ef4444; }
+  .sync-status-row .label { font-weight: 600; color: var(--gray-700); }
+  .sync-status-row .meta  { color: var(--gray-500); font-size: 12px; }
+  .sync-field { margin-bottom: 10px; }
+  .sync-field label { display: block; font-size: 12px; color: var(--gray-600); margin-bottom: 4px; font-weight: 500; }
+  .sync-field input {
+    width: 100%; padding: 8px 10px;
+    border: 1px solid var(--gray-200); border-radius: 8px;
+    font-size: 14px; font-family: inherit;
+    background: white; color: var(--gray-800);
+  }
+  .sync-field input:focus { outline: 2px solid var(--primary-light); border-color: var(--primary); }
+  .sync-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .sync-tip {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: #eaf0ff;
+    border-radius: var(--radius-sm);
+    font-size: 12px; color: var(--gray-700);
+    line-height: 1.6;
+  }
+  .sync-tip a { color: var(--primary); text-decoration: none; font-weight: 500; }
+  .sync-tip a:hover { text-decoration: underline; }
+
+  .container { flex: 1; width: 100%; max-width: 1200px; margin: 0 auto; padding: 16px; }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .stat-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    box-shadow: var(--shadow-sm);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .stat-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .stat-icon.blue { background: var(--primary-light); color: var(--primary); }
+  .stat-icon.green { background: #d1fae5; color: var(--success); }
+  .stat-icon.amber { background: #fef3c7; color: var(--warning); }
+  .stat-icon.red { background: #fee2e2; color: var(--danger); }
+  .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
+  .stat-value { font-size: 20px; font-weight: 700; line-height: 1.1; color: var(--gray-900); }
+  .stat-label { font-size: 12px; color: var(--gray-500); }
+
+  /* Toolbar */
+  .toolbar {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 12px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 14px;
+  }
+  .toolbar-row { display: flex; flex-direction: column; gap: 10px; }
+  .search-box {
+    position: relative;
+    width: 100%;
+  }
+  .search-box input {
+    width: 100%;
+    padding: 10px 14px 10px 38px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    background: var(--gray-50);
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .search-box input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+  }
+  .search-box .search-icon {
+    position: absolute;
+    left: 12px; top: 50%; transform: translateY(-50%);
+    color: var(--gray-400);
+    font-size: 16px;
+  }
+  .filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+  .filters::-webkit-scrollbar { display: none; }
+  .chip {
+    background: var(--gray-100);
+    color: var(--gray-700);
+    border: 1.5px solid transparent;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .chip:hover { background: var(--gray-200); }
+  .chip.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+  .toolbar-actions { display: flex; gap: 8px; }
+  .btn {
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--primary); color: white; flex: 1; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-ghost { background: var(--gray-100); color: var(--gray-700); }
+  .btn-ghost:hover { background: var(--gray-200); }
+  .btn-danger { background: var(--danger); color: white; }
+  .btn-secondary { background: var(--gray-200); color: var(--gray-700); }
+
+  /* School list */
+  .school-grouped { display: flex; flex-direction: column; gap: 18px; }
+  .school-group { display: flex; flex-direction: column; gap: 10px; }
+  .group-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding: 0 4px;
+    border-bottom: 1px solid var(--gray-200);
+    padding-bottom: 6px;
+  }
+  .group-title {
+    font-size: 15px; font-weight: 700; color: var(--gray-800);
+  }
+  .group-count {
+    font-size: 12px; color: var(--gray-500); font-weight: 500;
+  }
+  .school-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .school-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: all 0.15s;
+    border-left: 4px solid var(--gray-300);
+    position: relative;
+  }
+  .school-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+  .school-card:active { transform: scale(0.99); }
+  .school-card.status-pending { border-left-color: var(--gray-400); }
+  .school-card.status-applied { border-left-color: var(--primary); }
+  .school-card.status-interview { border-left-color: var(--warning); }
+  .school-card.status-accepted { border-left-color: var(--success); }
+  .school-card.status-rejected { border-left-color: var(--danger); }
+  .school-card.status-abandoned { border-left-color: var(--gray-300); }
+  .school-card-header {
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+    margin-bottom: 8px;
+  }
+  .school-name { font-size: 16px; font-weight: 600; color: var(--gray-900); margin: 0; }
+  .school-type {
+    font-size: 11px;
+    padding: 2px 8px;
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: 999px;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+  .school-info { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--gray-600); }
+  .school-info-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .school-info-row .ic { color: var(--gray-400); width: 14px; text-align: center; }
+  .lang-tag {
+    display: inline-block;
+    background: var(--primary-light);
+    color: var(--primary);
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-weight: 500;
+  }
+  .school-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--gray-200); }
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 12px; font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+  .status-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
+  .status-badge.pending { background: var(--gray-100); color: var(--gray-600); }
+  .status-badge.pending::before { background: var(--gray-400); }
+  .status-badge.applied { background: var(--primary-light); color: var(--primary); }
+  .status-badge.applied::before { background: var(--primary); }
+  .status-badge.interview { background: #fef3c7; color: #b45309; }
+  .status-badge.interview::before { background: var(--warning); }
+  .status-badge.accepted { background: #d1fae5; color: #047857; }
+  .status-badge.accepted::before { background: var(--success); }
+  .status-badge.rejected { background: #fee2e2; color: #b91c1c; }
+  .status-badge.rejected::before { background: var(--danger); }
+  .status-badge.abandoned { background: var(--gray-100); color: var(--gray-500); }
+  .status-badge.abandoned::before { background: var(--gray-400); }
+  .feedback-count { font-size: 12px; color: var(--gray-500); display: flex; align-items: center; gap: 4px; }
+  .upcoming-tag {
+    position: absolute; top: 12px; right: 12px;
+    background: var(--danger);
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    display: none;
+  }
+  .upcoming-tag.show { display: block; }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--gray-500);
+  }
+  .empty .emoji { font-size: 48px; margin-bottom: 12px; }
+  .empty h3 { margin: 0 0 8px; color: var(--gray-700); font-weight: 600; }
+  .empty p { margin: 0 0 20px; font-size: 14px; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    z-index: 100;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--card);
+    width: 100%;
+    max-width: 600px;
+    max-height: 92vh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.25s ease-out;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-header {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex; justify-content: space-between; align-items: center;
+    flex-shrink: 0;
+  }
+  .modal-header h2 { margin: 0; font-size: 17px; font-weight: 600; }
+  .modal-body { padding: 16px 18px; overflow-y: auto; flex: 1; }
+  .modal-footer {
+    padding: 12px 18px;
+    border-top: 1px solid var(--gray-200);
+    display: flex; gap: 8px;
+    flex-shrink: 0;
+    background: var(--gray-50);
+  }
+  .close-btn {
+    background: var(--gray-100);
+    color: var(--gray-600);
+    border: none;
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .close-btn:hover { background: var(--gray-200); }
+
+  /* Form */
+  .form-group { margin-bottom: 14px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; }
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: inherit;
+    background: white;
+    transition: all 0.15s;
+    color: var(--gray-800);
+  }
+  .form-textarea { resize: vertical; min-height: 70px; }
+
+  /* Language pills (multi-select) */
+  .lang-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .lang-pill {
+    cursor: pointer;
+    user-select: none;
+  }
+  .lang-pill input { display: none; }
+  .lang-pill span {
+    display: inline-block;
+    padding: 6px 12px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 999px;
+    font-size: 13px;
+    color: var(--gray-700);
+    background: white;
+    transition: all 0.15s;
+  }
+  .lang-pill input:checked + span {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    font-weight: 600;
+  }
+  .lang-pill:hover span { border-color: var(--primary); }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none; border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79,124,255,0.1);
+  }
+
+  /* Feedback timeline */
+  .timeline { margin-top: 4px; }
+  .timeline-item {
+    background: var(--gray-50);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--primary);
+    position: relative;
+  }
+  .timeline-item-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;
+  }
+  .timeline-date { font-size: 12px; color: var(--gray-500); font-weight: 500; }
+  .timeline-method {
+    font-size: 11px;
+    padding: 1px 8px;
+    background: white;
+    border-radius: 999px;
+    color: var(--primary);
+    border: 1px solid var(--primary-light);
+  }
+  .timeline-content { font-size: 14px; color: var(--gray-700); white-space: pre-wrap; word-break: break-word; }
+  .timeline-remove {
+    background: none; border: none; color: var(--gray-400);
+    cursor: pointer; padding: 2px 4px; font-size: 16px;
+  }
+  .timeline-remove:hover { color: var(--danger); }
+
+  .add-feedback-form {
+    background: var(--primary-light);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+    margin-top: 10px;
+  }
+  .add-feedback-form .form-row { gap: 8px; }
+  .add-feedback-form .form-group { margin-bottom: 8px; }
+
+  /* Section title */
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-600);
+    margin: 16px 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  /* Baby profile */
+  .profile-card {
+    background: linear-gradient(135deg, #eaf0ff 0%, #f5f0ff 100%);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow-sm);
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1.5px solid transparent;
+  }
+  .profile-card:hover { box-shadow: var(--shadow); border-color: var(--primary-light); }
+  .profile-card:active { transform: scale(0.99); }
+  .profile-avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: white;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+  }
+  .profile-info { flex: 1; min-width: 0; }
+  .profile-name { font-size: 15px; font-weight: 600; color: var(--gray-900); }
+  .profile-meta { font-size: 12px; color: var(--gray-600); margin-top: 2px; }
+  .profile-meta strong { color: var(--primary); }
+  .profile-card.has-value { background: linear-gradient(135deg, #eaf0ff 0%, #f5f0ff 100%); }
+  .profile-arrow { color: var(--gray-400); font-size: 18px; }
+
+  /* Inline timeline under profile card */
+  .profile-timeline {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    margin-top: 8px;
+    padding-bottom: 2px;
+  }
+  .profile-timeline::-webkit-scrollbar { height: 4px; }
+  .profile-timeline::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 2px; }
+  .timeline-chip {
+    flex-shrink: 0;
+    background: white;
+    border: 1px solid var(--primary-light);
+    border-radius: 10px;
+    padding: 4px 8px 5px;
+    font-size: 11px;
+    line-height: 1.2;
+    color: var(--gray-700);
+    min-width: 64px;
+    text-align: center;
+  }
+  .timeline-chip .chip-level { font-weight: 600; color: var(--primary); display: block; }
+  .timeline-chip .chip-age { color: var(--gray-500); font-size: 10px; }
+  .timeline-chip .chip-date { color: var(--gray-700); font-weight: 500; }
+  .timeline-chip.next {
+    background: linear-gradient(135deg, #4f7cff 0%, #6f9bff 100%);
+    border-color: transparent;
+  }
+  .timeline-chip.next .chip-level,
+  .timeline-chip.next .chip-age,
+  .timeline-chip.next .chip-date { color: white; }
+  .timeline-chip.next .chip-age { opacity: 0.85; }
+  .profile-timeline-empty {
+    font-size: 11px;
+    color: var(--gray-400);
+    font-style: italic;
+    padding: 4px 0;
+  }
+
+  /* K1 reference card */
+  .k1-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 14px;
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+  }
+  .k1-header {
+    padding: 12px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    background: linear-gradient(135deg, #eaf0ff 0%, #f5f0ff 100%);
+  }
+  .k1-title { font-size: 14px; font-weight: 600; color: var(--gray-800); }
+  .k1-toggle {
+    background: white;
+    border: 1px solid var(--gray-200);
+    color: var(--gray-600);
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: transform 0.2s;
+  }
+  .k1-card.open .k1-toggle { transform: rotate(180deg); }
+  .k1-body { padding: 12px 14px 14px; }
+  .k1-image {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+    display: block;
+  }
+  .k1-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 8px;
+  }
+  .k1-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .k1-list li {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 10px;
+    padding: 8px 10px;
+    border-bottom: 1px dashed var(--gray-200);
+    font-size: 13px;
+    align-items: center;
+  }
+  .k1-list li:last-child { border-bottom: none; }
+  .k1-list .k1-time {
+    color: var(--primary);
+    font-weight: 600;
+    background: var(--primary-light);
+    padding: 3px 8px;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 12px;
+  }
+  .k1-list .k1-event { color: var(--gray-700); }
+  .k1-table-wrap { overflow-x: auto; }
+  .k1-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .k1-table th, .k1-table td {
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .k1-table th {
+    background: var(--primary);
+    color: white;
+    font-weight: 600;
+    font-size: 12px;
+  }
+  .k1-table th:first-child { border-top-left-radius: 6px; }
+  .k1-table th:last-child { border-top-right-radius: 6px; }
+  .k1-table tr:last-child td { border-bottom: none; }
+  .k1-table td { color: var(--gray-700); }
+
+  /* Profile modal — table-like rows */
+  .profile-section {
+    background: var(--gray-50);
+    border-radius: var(--radius-sm);
+    padding: 4px 0;
+    margin-bottom: 12px;
+  }
+  .profile-row {
+    display: grid;
+    grid-template-columns: 70px 1fr 100px;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-bottom: 1px dashed var(--gray-200);
+  }
+  .profile-row:last-child { border-bottom: none; }
+  .profile-row .row-label {
+    font-size: 13px; font-weight: 600; color: var(--gray-700);
+  }
+  .profile-row .row-input { margin: 0; }
+  .profile-row .row-age {
+    text-align: right;
+    font-size: 12px;
+    color: var(--gray-500);
+    font-weight: 500;
+  }
+  .profile-row .row-age.has { color: var(--primary); font-weight: 600; }
+  .profile-row .row-age {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 1px;
+    line-height: 1.15;
+  }
+  .profile-row .age-num { font-size: 12px; font-weight: 600; }
+  .profile-row .age-date {
+    font-size: 10px;
+    color: var(--primary);
+    background: var(--primary-light);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 600;
+    display: inline-block;
+    white-space: nowrap;
+  }
+  .profile-row.has-value { background: rgba(79,124,255,0.05); }
+  .profile-row.has-value .row-label { color: var(--primary); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--gray-800);
+    color: white;
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 14px;
+    z-index: 200;
+    opacity: 0;
+    transition: all 0.25s;
+    pointer-events: none;
+    box-shadow: var(--shadow-lg);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.success { background: var(--success); }
+  .toast.error { background: var(--danger); }
+
+  /* Floating add button (mobile) */
+  .fab {
+    position: fixed;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    right: calc(20px + env(safe-area-inset-right, 0px));
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    border: none;
+    box-shadow: var(--shadow-lg);
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 40;
+    display: none;
+    align-items: center; justify-content: center;
+  }
+  .fab:hover { background: var(--primary-dark); }
+  .fab:active { transform: scale(0.92); }
+
+  /* Desktop layout */
+  @media (min-width: 640px) {
+    .stats { grid-template-columns: repeat(4, 1fr); }
+    .toolbar-row { flex-direction: row; align-items: center; }
+    .search-box { flex: 1; }
+    .school-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .fab { display: inline-flex; }
+  }
+  @media (min-width: 1024px) {
+    .school-grid { grid-template-columns: repeat(3, 1fr); }
+    .modal { border-radius: var(--radius-lg); margin: 20px; max-height: 88vh; }
+    .modal-overlay { align-items: center; padding: 20px; }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  }
+
+  /* Install helper modal */
+  .install-hero {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--primary-light);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+  .install-hero-emoji { font-size: 32px; }
+  .install-hero-title { font-weight: 600; color: var(--primary-dark); font-size: 15px; line-height: 1.4; }
+  .install-hero-sub { font-size: 12px; color: var(--gray-600); margin-top: 2px; }
+  .install-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+  .install-tab {
+    flex: 1; padding: 8px 12px; text-align: center;
+    border: 1px solid var(--gray-200); border-radius: 10px;
+    background: white; color: var(--gray-600);
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .install-tab.active {
+    background: var(--primary); color: white; border-color: var(--primary);
+  }
+  .install-steps { display: none; }
+  .install-steps.active { display: block; }
+  .install-step {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--gray-100);
+  }
+  .install-step:last-child { border-bottom: none; }
+  .install-step-num {
+    flex-shrink: 0;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--primary); color: white;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+  }
+  .install-step-text { flex: 1; font-size: 14px; color: var(--gray-700); line-height: 1.5; }
+  .install-step-text strong { color: var(--gray-900); }
+  .install-tip {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    color: #9a3412;
+    line-height: 1.5;
+  }
+  .install-step-img {
+    margin-top: 6px;
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 8px;
+    background: var(--gray-100);
+    border-radius: 6px;
+    font-size: 16px;
+  }
+
+  /* PWA install banner (Android Chrome) */
+  .pwa-banner {
+    position: fixed; left: 12px; right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    background: white; color: var(--gray-800);
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(15,23,42,0.18);
+    padding: 12px 14px;
+    display: flex; align-items: center; gap: 10px;
+    z-index: 60;
+    border: 1px solid var(--gray-200);
+    transform: translateY(120%); opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  .pwa-banner.show { transform: translateY(0); opacity: 1; }
+  .pwa-banner-icon { font-size: 24px; }
+  .pwa-banner-text { flex: 1; font-size: 13px; line-height: 1.4; }
+  .pwa-banner-text strong { display: block; font-size: 14px; margin-bottom: 2px; }
+  .pwa-banner-actions { display: flex; gap: 6px; }
+  .pwa-banner-btn {
+    border: none; padding: 6px 12px; border-radius: 8px;
+    font-size: 13px; font-weight: 500; cursor: pointer;
+  }
+  .pwa-banner-btn.primary { background: var(--primary); color: white; }
+  .pwa-banner-btn.ghost { background: var(--gray-100); color: var(--gray-700); }
+
+  /* Standalone mode tweaks (when running as installed app) */
+  @media all and (display-mode: standalone) {
+    .header { padding-top: calc(16px + env(safe-area-inset-top, 0px)); }
+    .install-only-web { display: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-row">
+      <div>
+        <h1><span class="emoji">🎒</span>屁宝学业生涯</h1>
+        <div class="header-sub" id="todayLabel"></div>
+      </div>
+      <div class="header-actions">
+        <span class="sync-dot" id="syncDot" title="同步状态" aria-label="同步状态"></span>
+        <button class="icon-btn" id="syncBtn" title="云同步设置" aria-label="云同步设置">☁</button>
+        <button class="icon-btn" id="installBtn" title="添加到主屏幕" aria-label="添加到主屏幕">📲</button>
+        <button class="icon-btn" id="exportBtn" title="导出数据" aria-label="导出">⤓</button>
+        <button class="icon-btn" id="importBtn" title="导入数据" aria-label="导入">⤒</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" />
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- Baby Profile -->
+    <div class="profile-card" id="profileCard">
+      <div class="profile-avatar" id="profileAvatar">👶</div>
+      <div class="profile-info">
+        <div class="profile-name" id="profileName">点击设置宝宝信息</div>
+        <div class="profile-meta" id="profileMeta">填写出生年月日、入学预计时间后，可自动计算入学年龄</div>
+        <div class="profile-timeline" id="profileTimeline"></div>
+      </div>
+      <div class="profile-arrow">›</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats" id="stats"></div>
+
+    <!-- K1 Reference -->
+    <div class="k1-card" id="k1Card">
+      <div class="k1-header">
+        <span class="k1-title">📚 K1 入学申请时间表</span>
+        <button class="k1-toggle" id="k1Toggle" aria-label="展开/收起">▾</button>
+      </div>
+      <div class="k1-body" id="k1Body" style="display:none">
+        <div class="k1-table-wrap">
+          <div class="k1-section-title">🎓 K1 入学申请时间表（香港教育局）</div>
+          <ul class="k1-list">
+            <li><span class="k1-time">2026年7月-8月</span><span class="k1-event">参加教育局家长简介会</span></li>
+            <li><span class="k1-time">2026年9月-11月</span><span class="k1-event">申请「幼稚園入学注册证」</span></li>
+            <li><span class="k1-time">2026年9月-12月</span><span class="k1-event">申请幼稚园学位</span></li>
+            <li><span class="k1-time">2026年10月-12月</span><span class="k1-event">参加幼稚园面试</span></li>
+            <li><span class="k1-time">2026年12月-2027年1月</span><span class="k1-event">公布录取结果、注册入学</span></li>
+            <li><span class="k1-time">2027年1月底起</span><span class="k1-event">如未获录取可申请其他幼稚园</span></li>
+            <li><span class="k1-time">2027年7月-8月</span><span class="k1-event">新生注册及迎新活动</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="toolbar-row">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="search" id="searchInput" placeholder="搜索学校名称、地址..." />
+        </div>
+        <div class="toolbar-actions">
+          <button class="btn btn-primary" id="addBtn">
+            <span style="font-size:16px;line-height:1">+</span> 添加学校
+          </button>
+        </div>
+      </div>
+      <div class="filters" id="filters" style="margin-top:12px"></div>
+      <div class="filters lang-filters" id="langFilters" style="margin-top:8px"></div>
+    </div>
+
+    <!-- List (grouped by category) -->
+    <div id="schoolGrid" class="school-grouped"></div>
+
+  </main>
+</div>
+
+<!-- FAB for mobile -->
+<button class="fab" id="fab" aria-label="添加">+</button>
+
+<!-- School Form Modal -->
+<div class="modal-overlay" id="schoolModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">添加学校</h2>
+      <button class="close-btn" data-close="schoolModal" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="schoolForm">
+        <input type="hidden" id="schoolId" />
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">学校名称 *</label>
+            <input class="form-input" id="fName" required placeholder="如：阳光幼儿园" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">类型</label>
+            <select class="form-select" id="fType">
+              <option value="幼儿园">幼儿园</option>
+              <option value="小学">小学</option>
+              <option value="初中">初中</option>
+              <option value="高中">高中</option>
+              <option value="大学">大学</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">授课语言 <span style="color:var(--gray-400);font-weight:400">（可多选）</span></label>
+          <div class="lang-pills" id="fLangPills">
+            <label class="lang-pill"><input type="checkbox" value="普通话" /><span>🀄 普通话</span></label>
+            <label class="lang-pill"><input type="checkbox" value="粤语" /><span>🍵 粤语</span></label>
+            <label class="lang-pill"><input type="checkbox" value="英语" /><span>🇬🇧 英语</span></label>
+            <label class="lang-pill"><input type="checkbox" value="日语" /><span>🇯🇵 日语</span></label>
+            <label class="lang-pill"><input type="checkbox" value="法语" /><span>🇫🇷 法语</span></label>
+            <label class="lang-pill"><input type="checkbox" value="其他" /><span>🌐 其他</span></label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">地址</label>
+          <input class="form-input" id="fAddress" placeholder="可选" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">联系人</label>
+            <input class="form-input" id="fContact" placeholder="老师/招生办" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">联系电话</label>
+            <input class="form-input" id="fPhone" type="tel" placeholder="可选" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">状态</label>
+            <select class="form-select" id="fStatus">
+              <option value="pending">待报名</option>
+              <option value="applied">已报名</option>
+              <option value="interview">面试中</option>
+              <option value="accepted">已录取</option>
+              <option value="rejected">已拒绝</option>
+              <option value="abandoned">已放弃</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">报名时间 <span style="color:var(--gray-400);font-weight:400">（可填时间段）</span></label>
+            <div class="form-row" style="grid-template-columns:1fr 14px 1fr;align-items:center">
+              <input class="form-input" id="fApplyDateStart" type="month" placeholder="开始月份" />
+              <span style="text-align:center;color:var(--gray-400)">→</span>
+              <input class="form-input" id="fApplyDateEnd" type="month" placeholder="结束月份" />
+            </div>
+            <div style="font-size:11px;color:var(--gray-500);margin-top:4px" id="fApplyDateHint">如：2026年9月-12月</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">学费(元/月)</label>
+            <input class="form-input" id="fTuition" type="number" min="0" placeholder="可选" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">距离(km)</label>
+            <input class="form-input" id="fDistance" type="number" min="0" step="0.1" placeholder="可选" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">备注</label>
+          <textarea class="form-textarea" id="fNotes" placeholder="如：特色课程、报名材料要求..."></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer" id="schoolModalFooter" style="display:flex;gap:8px">
+      <button class="btn btn-danger" id="deleteBtn" style="display:none">删除</button>
+      <button class="btn btn-secondary" data-close="schoolModal">取消</button>
+      <button class="btn btn-primary" id="saveBtn" style="flex:1">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="detailTitle">学校详情</h2>
+      <button class="close-btn" data-close="detailModal" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="editDetailBtn" style="flex:1">编辑信息</button>
+    </div>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>👶 宝宝基本信息</h2>
+      <button class="close-btn" data-close="profileModal" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">昵称</label>
+        <input class="form-input" id="pName" placeholder="如：屁宝" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">性别</label>
+        <select class="form-select" id="pGender">
+          <option value="">未设置</option>
+          <option value="男">男</option>
+          <option value="女">女</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">出生年月日 *</label>
+        <input class="form-input" id="pDob" type="date" />
+        <div style="font-size:12px;color:var(--gray-500);margin-top:4px" id="pAgeNow"></div>
+      </div>
+
+      <div class="section-title" style="margin-top:18px">
+        <span>🎓 入学预计时间 & 自动计算</span>
+        <span style="font-size:11px;color:var(--gray-400);font-weight:normal;text-transform:none;letter-spacing:0" id="pProfileSummary"></span>
+      </div>
+      <div class="profile-section" id="pEnrollRows">
+        <!-- rows injected by JS -->
+      </div>
+      <div style="font-size:12px;color:var(--gray-500);line-height:1.6;background:var(--primary-light);padding:10px 12px;border-radius:8px">
+        💡 入学年龄 = 入学日期 − 出生年月，结果保留 1 位小数（如 <strong>3岁8个月</strong> 显示为 <strong>3.7</strong> 岁）。
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-close="profileModal">取消</button>
+      <button class="btn btn-primary" id="pSaveBtn" style="flex:1">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Confirm dialog -->
+<div class="modal-overlay" id="confirmOverlay" style="align-items:center;padding:20px">
+  <div class="modal" style="max-width:420px;border-radius:var(--radius-lg)">
+    <div class="modal-body" id="confirmBody" style="font-size:15px;line-height:1.6;color:var(--gray-700);white-space:pre-wrap;padding:20px 18px"></div>
+    <div class="modal-footer" style="display:flex;gap:8px">
+      <button class="btn btn-secondary" id="confirmCancel" style="flex:1">取消</button>
+      <button class="btn btn-danger" id="confirmOk" style="flex:1">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================== Data Layer ================== */
+const STORAGE_KEY = 'baby_school_tracker_v1';
+const SYNC_CFG_KEY = 'baby_school_tracker_sync_cfg';   // {appId, appKey, objectId}
+
+/* ================== LeanCloud 云同步 ================== */
+let lcInited = false;
+let lcObject = null;
+let syncStatus = 'local';   // 'local' | 'syncing' | 'synced' | 'offline' | 'error'
+let syncMessage = '';
+
+function getSyncCfg() {
+  try { return JSON.parse(localStorage.getItem(SYNC_CFG_KEY) || '{}'); }
+  catch { return {}; }
+}
+function setSyncCfg(cfg) {
+  localStorage.setItem(SYNC_CFG_KEY, JSON.stringify(cfg || {}));
+  if (!cfg || !cfg.appId || !cfg.appKey) {
+    lcInited = false; lcObject = null;
+  }
+}
+function initLeanCloud() {
+  const cfg = getSyncCfg();
+  if (!cfg.appId || !cfg.appKey) { syncStatus = 'local'; return; }
+  try {
+    AV.init({ appId: cfg.appId, appKey: cfg.appKey, serverURL: cfg.serverURL || 'https://please.update.server.url' });
+    lcInited = true;
+  } catch (e) {
+    console.error('AV init failed', e);
+    syncStatus = 'error';
+    syncMessage = '初始化失败：' + e.message;
+  }
+}
+
+async function pullFromCloud() {
+  if (!lcInited) return null;
+  const cfg = getSyncCfg();
+  if (!cfg.objectId) return null;     // 还没在云端建过条目
+  try {
+    const obj = await new AV.Query('SchoolTracker').get(cfg.objectId);
+    const payload = obj.get('payload');
+    return payload || null;
+  } catch (e) {
+    if (e && e.code === 101) return null;   // 找不到，正常
+    console.warn('pullFromCloud', e);
+    throw e;
+  }
+}
+async function pushToCloud(data) {
+  if (!lcInited) return;
+  const cfg = getSyncCfg();
+  try {
+    let obj;
+    if (cfg.objectId) {
+      obj = await new AV.Query('SchoolTracker').get(cfg.objectId);
+    } else {
+      obj = new AV.Object('SchoolTracker');
+    }
+    obj.set('payload', data);
+    const saved = await obj.save();
+    if (!cfg.objectId) {
+      cfg.objectId = saved.id;
+      setSyncCfg(cfg);
+    }
+  } catch (e) {
+    console.error('pushToCloud', e);
+    throw e;
+  }
+}
+
+function setSyncIndicator() {
+  const el = document.getElementById('syncDot');
+  if (!el) return;
+  const map = {
+    local:    { color: '#94a3b8', text: '本地' },
+    syncing:  { color: '#f59e0b', text: '同步中…' },
+    synced:   { color: '#10b981', text: '已同步' },
+    offline:  { color: '#94a3b8', text: '离线' },
+    error:    { color: '#ef4444', text: '同步失败' },
+  };
+  const s = map[syncStatus] || map.local;
+  el.style.background = s.color;
+  el.title = s.text + (syncMessage ? ' · ' + syncMessage : '');
+}
+
+let saveTimer = null;
+async function saveAndSync(data) {
+  // 先存本地，立即可用
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  // 防抖推云
+  if (!lcInited) { syncStatus = 'local'; setSyncIndicator(); return; }
+  clearTimeout(saveTimer);
+  syncStatus = 'syncing'; setSyncIndicator();
+  saveTimer = setTimeout(async () => {
+    try {
+      await pushToCloud(data);
+      syncStatus = 'synced'; syncMessage = '';
+    } catch (e) {
+      syncStatus = 'error'; syncMessage = (e && e.message) || '网络错误';
+    }
+    setSyncIndicator();
+  }, 600);
+}
+
+async function bootstrapSync() {
+  initLeanCloud();
+  setSyncIndicator();
+  if (!lcInited) return;
+  syncStatus = 'syncing'; setSyncIndicator();
+  try {
+    const cloudData = await pullFromCloud();
+    if (cloudData) {
+      // 用云端覆盖本地
+      state.data = mergeData(cloudData, state.data);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
+      render();
+      syncStatus = 'synced'; syncMessage = '';
+    } else if (getSyncCfg().objectId) {
+      // 找到了 objectId 但云端空，不动
+      syncStatus = 'synced'; syncMessage = '';
+    } else {
+      // 首次启用同步，把当前本地数据推上去
+      await pushToCloud(state.data);
+      syncStatus = 'synced'; syncMessage = '';
+    }
+  } catch (e) {
+    syncStatus = 'error'; syncMessage = e.message || '网络错误';
+  }
+  setSyncIndicator();
+}
+
+function mergeData(remote, local) {
+  // 简单策略：以云端为主，缺失字段用本地补
+  if (!remote) return local;
+  return {
+    schools: Array.isArray(remote.schools) ? remote.schools : (local.schools || []),
+    profile: Object.assign({}, local.profile || emptyProfile(), remote.profile || {}),
+  };
+}
+
+const STATUS_LABELS = {
+  pending: '待报名',
+  applied: '已报名',
+  interview: '面试中',
+  accepted: '已录取',
+  rejected: '已拒绝',
+  abandoned: '已放弃',
+};
+const STATUS_NAMES = Object.keys(STATUS_LABELS);
+
+// 入学阶段定义
+const ENROLL_LEVELS = [
+  { key: 'N',    label: 'N 班',   desc: '学前/托班' },
+  { key: 'K1',   label: 'K1 班',  desc: '幼儿园小班' },
+  { key: 'K2',   label: 'K2 班',  desc: '幼儿园中班' },
+  { key: 'K3',   label: 'K3 班',  desc: '幼儿园大班' },
+  { key: 'Y1',   label: 'Y1 班',  desc: '小学一年级' },
+  { key: 'Y2',   label: 'Y2 班',  desc: '小学二年级' },
+  { key: 'Y3',   label: 'Y3 班',  desc: '小学三年级' },
+  { key: 'Y4',   label: 'Y4 班',  desc: '小学四年级' },
+  { key: 'Y5',   label: 'Y5 班',  desc: '小学五年级' },
+  { key: 'Y6',   label: 'Y6 班',  desc: '小学六年级' },
+  { key: 'Y7',   label: 'Y7 班',  desc: '初一' },
+  { key: 'Y8',   label: 'Y8 班',  desc: '初二' },
+  { key: 'Y9',   label: 'Y9 班',  desc: '初三' },
+  { key: 'Y10',  label: 'Y10 班', desc: '高一' },
+  { key: 'Y11',  label: 'Y11 班', desc: '高二' },
+  { key: 'Y12',  label: 'Y12 班', desc: '高三' },
+];
+
+function emptyProfile() {
+  return {
+    name: '',
+    gender: '',
+    dob: '',           // YYYY-MM-DD
+    enrollments: {},   // { N: 'YYYY-MM', K1: 'YYYY-MM', ... }
+  };
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { schools: [], profile: emptyProfile() };
+    const data = JSON.parse(raw);
+    if (!data.schools) data.schools = [];
+    if (!data.profile) data.profile = emptyProfile();
+    if (!data.profile.enrollments) data.profile.enrollments = {};
+    return data;
+  } catch (e) {
+    console.error('loadData', e);
+    return { schools: [], profile: emptyProfile() };
+  }
+}
+function saveData(data) {
+  // 兼容旧调用，转发到带同步的版本
+  saveAndSync(data);
+}
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+// 计算"出生日期 + N 月"后，入学日期距离出生是多少年（保留 1 位小数）
+// dob: 'YYYY-MM-DD', enroll: 'YYYY-MM' or 'YYYY-MM-DD'
+function calcAgeAtEnrollment(dob, enroll) {
+  if (!dob || !enroll) return null;
+  const dParts = dob.split('-').map(Number);
+  if (dParts.length < 3 || !dParts[0] || !dParts[1] || !dParts[2]) return null;
+  const [dy, dm, dd] = dParts;
+
+  let ey, em, ed;
+  if (enroll.length === 7) { // YYYY-MM
+    [ey, em] = enroll.split('-').map(Number);
+    ed = 1;
+  } else if (enroll.length === 10) { // YYYY-MM-DD
+    [ey, em, ed] = enroll.split('-').map(Number);
+  } else {
+    return null;
+  }
+  if (!ey || !em) return null;
+
+  // 真实日历差：先按月数差，再用 day 校正
+  let totalMonths = (ey - dy) * 12 + (em - dm);
+  if (totalMonths < 0) return { years: -(Math.abs(totalMonths) / 12), months: 0, valid: false };
+  if (typeof ed === 'number' && ed < dd) totalMonths -= 1;
+  // 重新计算 days & months（处理完日期后再取整）
+  if (typeof ed === 'number') {
+    const daysDiff = Math.round((Date.UTC(ey, em - 1, ed) - Date.UTC(dy, dm - 1, dd)) / 86400000);
+    if (daysDiff < 0) return { valid: false };
+    return {
+      years: Math.floor(daysDiff / 365.25 * 10) / 10,
+      daysDiff,
+      decimal: Math.round((daysDiff / 365.25) * 10) / 10,
+      totalMonths,
+      valid: true,
+    };
+  }
+  return {
+    years: Math.floor(totalMonths / 12),
+    months: totalMonths % 12,
+    decimal: Math.round((totalMonths / 12) * 10) / 10,
+    totalMonths,
+    valid: true,
+  };
+}
+function formatAge(age) {
+  if (!age) return '';
+  if (!age.valid) return '⚠ 早于出生';
+  // 入学生日（YYYY-MM）精度下返回 "X岁Y个月"
+  if (age.years === 0 && age.months === 0) return '当天';
+  if (age.years === 0) return `${age.months}个月`;
+  if (age.months === 0) return `${age.years}岁`;
+  return `${age.years}岁${age.months}个月`;
+}
+
+/* ================== State ================== */
+let state = {
+  data: loadData(),
+  filter: 'all',
+  lang: '',
+  search: '',
+};
+
+function getFiltered() {
+  let list = state.data.schools.slice();
+  if (state.filter !== 'all') list = list.filter(s => s.status === state.filter);
+  if (state.lang) {
+    list = list.filter(s => {
+      const ls = Array.isArray(s.languages) ? s.languages : (s.language ? [s.language] : []);
+      return ls.includes(state.lang);
+    });
+  }
+  if (state.search) {
+    const q = state.search.toLowerCase();
+    list = list.filter(s =>
+      (s.name || '').toLowerCase().includes(q) ||
+      (s.address || '').toLowerCase().includes(q) ||
+      (s.contact || '').toLowerCase().includes(q) ||
+      (s.notes || '').toLowerCase().includes(q)
+    );
+  }
+  // sort: upcoming first, then by name
+  list.sort((a, b) => {
+    const ua = nextUpcomingDays(a);
+    const ub = nextUpcomingDays(b);
+    if (ua !== null && ub === null) return -1;
+    if (ua === null && ub !== null) return 1;
+    if (ua !== null && ub !== null) return ua - ub;
+    return (a.name || '').localeCompare(b.name || '');
+  });
+  return list;
+}
+
+function nextUpcomingDays(school) {
+  if (!school.events || !school.events.length) return null;
+  const now = new Date(); now.setHours(0,0,0,0);
+  const ts = school.events
+    .map(e => new Date(e.date).getTime())
+    .filter(t => !isNaN(t) && t >= now.getTime())
+    .sort((a, b) => a - b);
+  if (!ts.length) return null;
+  return Math.round((ts[0] - now.getTime()) / 86400000);
+}
+
+/* ================== Render ================== */
+function render() {
+  renderProfileCard();
+  renderStats();
+  renderFilters();
+  renderList();
+  saveData(state.data);
+}
+
+function renderProfileCard() {
+  const p = state.data.profile || (state.data.profile = emptyProfile());
+  const nameEl = document.getElementById('profileName');
+  const metaEl = document.getElementById('profileMeta');
+  const avatar = document.getElementById('profileAvatar');
+  const haveName = !!p.name;
+  const haveDob = !!p.dob;
+
+  if (haveName) {
+    nameEl.textContent = `${p.name}${p.gender ? ' · ' + p.gender : ''}`;
+  } else {
+    nameEl.textContent = '点击设置宝宝信息';
+  }
+  avatar.textContent = p.gender === '女' ? '👧🏻' : p.gender === '男' ? '👦🏻' : '👶';
+
+  const filled = ENROLL_LEVELS.filter(lv => p.enrollments && p.enrollments[lv.key]).length;
+  const parts = [];
+  if (haveDob) {
+    const now = new Date();
+    const [dy, dm, dd] = p.dob.split('-').map(Number);
+    const daysDiff = Math.round((Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) - Date.UTC(dy, dm - 1, dd)) / 86400000);
+    if (daysDiff < 0) {
+      parts.push('⚠ 出生日期晚于今天');
+    } else {
+      const yrs = Math.floor(daysDiff / 365.25 * 10) / 10;
+      parts.push(`<strong>${yrs}岁</strong>`);
+    }
+  } else {
+    parts.push('未填写出生日期');
+  }
+  parts.push(`已规划 <strong>${filled}/${ENROLL_LEVELS.length}</strong> 个阶段`);
+  metaEl.innerHTML = parts.join(' · ');
+
+  // 入学时间线 chip（直接在卡片上展示）
+  const tl = document.getElementById('profileTimeline');
+  if (!filled) {
+    tl.innerHTML = `<div class="profile-timeline-empty">未规划入学时间，点击设置 →</div>`;
+    document.getElementById('profileCard').classList.remove('has-value');
+  } else {
+    const today = new Date();
+    const items = ENROLL_LEVELS
+      .filter(lv => p.enrollments[lv.key])
+      .map(lv => {
+        const date = p.enrollments[lv.key];
+        const age = calcAgeAtEnrollment(p.dob, date);
+        const d = new Date(date + '-01');
+        const diff = Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())) / 86400000);
+        const isNext = age && age.valid && diff >= 0;
+        return `
+          <div class="timeline-chip ${isNext ? 'next' : ''}" title="${escapeHTML(lv.label)} · ${escapeHTML(date)} · ${age && age.valid ? age.decimal + '岁' : '—'}">
+            <span class="chip-level">${escapeHTML(lv.label)}</span>
+            <span class="chip-date">${escapeHTML(date)}</span>
+            <span class="chip-age">${age && age.valid ? age.decimal + '岁' : '—'}</span>
+          </div>
+        `;
+      });
+    tl.innerHTML = items.join('');
+    document.getElementById('profileCard').classList.add('has-value');
+  }
+}
+
+function renderStats() {
+  const list = state.data.schools;
+  const counts = {
+    total: list.length,
+    active: list.filter(s => ['pending','applied','interview'].includes(s.status)).length,
+    accepted: list.filter(s => s.status === 'accepted').length,
+    rejected: list.filter(s => ['rejected','abandoned'].includes(s.status)).length,
+  };
+  const upcoming = list.filter(s => {
+    const d = nextUpcomingDays(s);
+    return d !== null && d <= 14;
+  }).length;
+
+  document.getElementById('stats').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-icon blue">🏫</div>
+      <div><div class="stat-value">${counts.total}</div><div class="stat-label">总申请数</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon amber">⏳</div>
+      <div><div class="stat-value">${counts.active}</div><div class="stat-label">进行中</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green">✓</div>
+      <div><div class="stat-value">${counts.accepted}</div><div class="stat-label">已录取</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon red">📅</div>
+      <div><div class="stat-value">${upcoming}</div><div class="stat-label">14天内事项</div></div>
+    </div>
+  `;
+}
+
+function renderFilters() {
+  const counts = { all: state.data.schools.length };
+  STATUS_NAMES.forEach(k => { counts[k] = state.data.schools.filter(s => s.status === k).length; });
+  const chips = [
+    { key: 'all', label: '全部' },
+    ...STATUS_NAMES.map(k => ({ key: k, label: STATUS_LABELS[k] })),
+  ];
+  document.getElementById('filters').innerHTML = chips.map(c =>
+    `<button class="chip ${state.filter === c.key ? 'active' : ''}" data-filter="${c.key}">${c.label} (${counts[c.key]})</button>`
+  ).join('');
+  document.querySelectorAll('#filters [data-filter]').forEach(el => {
+    el.onclick = () => { state.filter = el.dataset.filter; renderList(); renderFilters(); };
+  });
+
+  // 授课语言筛选
+  const langChips = [{ key: '', label: '🗣️ 全部语言' }];
+  ['普通话','粤语','英语','日语','法语','其他'].forEach(l => {
+    langChips.push({ key: l, label: l });
+  });
+  document.getElementById('langFilters').innerHTML = langChips.map(c => {
+    const active = state.lang === c.key;
+    return `<button class="chip lang-chip ${active ? 'active' : ''}" data-lang="${escapeHTML(c.key)}">${escapeHTML(c.label)}</button>`;
+  }).join('');
+  document.querySelectorAll('#langFilters [data-lang]').forEach(el => {
+    el.onclick = () => { state.lang = el.dataset.lang; renderList(); renderFilters(); };
+  });
+}
+
+function renderList() {
+  const list = getFiltered();
+  const grid = document.getElementById('schoolGrid');
+  if (!list.length) {
+    grid.innerHTML = `
+      <div class="empty" style="grid-column:1/-1">
+        <div class="emoji">${state.data.schools.length ? '🔍' : '🎒'}</div>
+        <h3>${state.data.schools.length ? '没有匹配的学校' : '还没有记录'}</h3>
+        <p>${state.data.schools.length ? '试试其他筛选条件' : '点击右上角"添加学校"开始记录吧'}</p>
+      </div>`;
+    return;
+  }
+  // 按学校类型分组显示
+  const ORDER = ['幼儿园', '小学', '初中', '高中', '大学', '其他'];
+  const groups = {};
+  list.forEach(s => { const k = s.type || '其他'; (groups[k] = groups[k] || []).push(s); });
+  const orderedKeys = ORDER.filter(k => groups[k]);
+  Object.keys(groups).forEach(k => { if (!orderedKeys.includes(k)) orderedKeys.push(k); });
+
+  grid.innerHTML = orderedKeys.map(k => {
+    const items = groups[k];
+    return `
+      <section class="school-group">
+        <div class="group-header">
+          <span class="group-title">${escapeHTML(k)}</span>
+          <span class="group-count">${items.length} 所</span>
+        </div>
+        <div class="school-grid">
+          ${items.map(s => schoolCardHTML(s)).join('')}
+        </div>
+      </section>
+    `;
+  }).join('');
+
+  grid.querySelectorAll('[data-id]').forEach(el => {
+    el.onclick = () => openDetail(el.dataset.id);
+  });
+}
+
+function schoolCardHTML(s) {
+  const fbCount = (s.feedbacks || []).length;
+  const evCount = (s.events || []).length;
+  const days = nextUpcomingDays(s);
+  const upcoming = days !== null && days <= 14;
+  const fee = s.tuition ? `¥${s.tuition}/月` : '';
+  const dist = s.distance ? `${s.distance}km` : '';
+  const langs = (Array.isArray(s.languages) ? s.languages : (s.language ? [s.language] : []));
+  return `
+    <div class="school-card status-${s.status}" data-id="${s.id}">
+      ${upcoming ? `<span class="upcoming-tag show">${days === 0 ? '今天' : days + '天后'}</span>` : ''}
+      <div class="school-card-header">
+        <h3 class="school-name">${escapeHTML(s.name)}</h3>
+        <span class="school-type">${escapeHTML(s.type || '学校')}</span>
+      </div>
+      <div class="school-info">
+        ${langs.length ? `<div class="school-info-row"><span class="ic">🗣️</span>${langs.map(l => `<span class="lang-tag">${escapeHTML(l)}</span>`).join(' ')}</div>` : ''}
+        ${s.address ? `<div class="school-info-row"><span class="ic">📍</span>${escapeHTML(s.address)}</div>` : ''}
+        ${s.contact ? `<div class="school-info-row"><span class="ic">👤</span>${escapeHTML(s.contact)}${s.phone ? ` · ${escapeHTML(s.phone)}` : ''}</div>` : ''}
+        ${(fee || dist) ? `<div class="school-info-row"><span class="ic">💰</span>${[fee, dist].filter(Boolean).join(' · ')}</div>` : ''}
+        ${(s.applyStart || s.applyDate) ? (() => {
+          const a = s.applyStart || s.applyDate;
+          const b = s.applyEnd || (s.applyStart ? '' : s.applyDate);
+          const text = (a && b && a !== b) ? `${a} → ${b}` : (a || b);
+          return `<div class="school-info-row"><span class="ic">📅</span>报名 ${escapeHTML(text)}</div>`;
+        })() : ''}
+      </div>
+      <div class="school-footer">
+        <span class="status-badge ${s.status}">${STATUS_LABELS[s.status] || '未设置'}</span>
+        <span class="feedback-count">💬 ${fbCount} · 📅 ${evCount}</span>
+      </div>
+    </div>
+  `;
+}
+
+function escapeHTML(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ================== Modal: School Form ================== */
+function openSchoolModal(id) {
+  const modal = document.getElementById('schoolModal');
+  const form = document.getElementById('schoolForm');
+  form.reset();
+  document.getElementById('deleteBtn').style.display = 'none';
+  // 每次打开重置删除回调，确保引用到当前最新的 deleteSchool
+  document.getElementById('deleteBtn').onclick = deleteSchool;
+  if (id) {
+    const s = state.data.schools.find(x => x.id === id);
+    if (!s) return;
+    document.getElementById('modalTitle').textContent = '编辑学校';
+    document.getElementById('schoolId').value = s.id;
+    document.getElementById('fName').value = s.name || '';
+    document.getElementById('fType').value = s.type || '幼儿园';
+    // 授课语言（多选）
+    const langs = Array.isArray(s.languages) ? s.languages : (s.language ? [s.language] : []);
+    document.querySelectorAll('#fLangPills input').forEach(cb => { cb.checked = langs.includes(cb.value); });
+    document.getElementById('fAddress').value = s.address || '';
+    document.getElementById('fContact').value = s.contact || '';
+    document.getElementById('fPhone').value = s.phone || '';
+    document.getElementById('fStatus').value = s.status || 'pending';
+    // 报名时间（兼容旧的 applyDate 单值；新格式为 applyStart/applyEnd）
+    const start = s.applyStart || s.applyDate || '';
+    const end = s.applyEnd || s.applyDate || '';
+    document.getElementById('fApplyDateStart').value = start;
+    document.getElementById('fApplyDateEnd').value = end;
+    document.getElementById('fTuition').value = s.tuition || '';
+    document.getElementById('fDistance').value = s.distance || '';
+    document.getElementById('fNotes').value = s.notes || '';
+    document.getElementById('deleteBtn').style.display = 'inline-flex';
+  } else {
+    document.getElementById('modalTitle').textContent = '添加学校';
+    document.getElementById('schoolId').value = '';
+    document.getElementById('fStatus').value = 'pending';
+    document.getElementById('fType').value = '幼儿园';
+    document.querySelectorAll('#fLangPills input').forEach(cb => { cb.checked = false; });
+    document.getElementById('fApplyDateStart').value = '';
+    document.getElementById('fApplyDateEnd').value = '';
+  }
+  modal.classList.add('show');
+}
+function closeSchoolModal() { document.getElementById('schoolModal').classList.remove('show'); }
+
+function saveSchool() {
+  const id = document.getElementById('schoolId').value;
+  const payload = {
+    name: document.getElementById('fName').value.trim(),
+    type: document.getElementById('fType').value,
+    languages: Array.from(document.querySelectorAll('#fLangPills input:checked')).map(cb => cb.value),
+    address: document.getElementById('fAddress').value.trim(),
+    contact: document.getElementById('fContact').value.trim(),
+    phone: document.getElementById('fPhone').value.trim(),
+    status: document.getElementById('fStatus').value,
+    applyStart: document.getElementById('fApplyDateStart').value,
+    applyEnd: document.getElementById('fApplyDateEnd').value,
+    tuition: document.getElementById('fTuition').value ? Number(document.getElementById('fTuition').value) : '',
+    distance: document.getElementById('fDistance').value ? Number(document.getElementById('fDistance').value) : '',
+    notes: document.getElementById('fNotes').value.trim(),
+  };
+  if (!payload.name) { toast('请填写学校名称', 'error'); return; }
+  if (id) {
+    const s = state.data.schools.find(x => x.id === id);
+    if (!s) { console.error('School not found:', id); return; }
+    Object.assign(s, payload);
+    // 兼容：旧数据有 applyDate 时清掉，避免和 start/end 冲突
+    if ('applyDate' in s) delete s.applyDate;
+    saveData(state.data);
+    toast('已更新', 'success');
+  } else {
+    payload.id = uid();
+    payload.feedbacks = [];
+    payload.events = [];
+    payload.createdAt = new Date().toISOString();
+    state.data.schools.push(payload);
+    saveData(state.data);
+    toast('已添加', 'success');
+  }
+  closeSchoolModal();
+  render();
+}
+function deleteSchool() {
+  const id = document.getElementById('schoolId').value;
+  if (!id) { toast('未选中要删除的学校', 'error'); return; }
+  const target = state.data.schools.find(s => s.id === id);
+  if (!target) { toast('找不到该学校', 'error'); return; }
+  // 使用自定义确认弹层（避免原生 confirm 在某些环境下被拦截/无反馈）
+  showConfirm(`确定要删除「${target.name}」吗？\n所有反馈和事项也会被删除，且无法恢复。`, () => {
+    state.data.schools = state.data.schools.filter(s => s.id !== id);
+    saveData(state.data);
+    closeSchoolModal();
+    closeDetailModal();
+    toast('已删除', 'success');
+    render();
+  });
+}
+
+/* ================== Modal: Detail ================== */
+let detailId = null;
+function openDetail(id) {
+  detailId = id;
+  const s = state.data.schools.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('detailTitle').textContent = s.name;
+  renderDetail();
+  document.getElementById('detailModal').classList.add('show');
+}
+function closeDetailModal() { document.getElementById('detailModal').classList.remove('show'); detailId = null; }
+
+function renderDetail() {
+  const s = state.data.schools.find(x => x.id === detailId);
+  if (!s) return;
+  const fb = (s.feedbacks || []).slice().sort((a,b) => (b.date || '').localeCompare(a.date || ''));
+  const ev = (s.events || []).slice().sort((a,b) => (a.date || '').localeCompare(b.date || ''));
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  document.getElementById('detailBody').innerHTML = `
+    <div style="margin-bottom:14px">
+      <span class="status-badge ${s.status}">${STATUS_LABELS[s.status]}</span>
+      <span class="school-type" style="margin-left:6px">${escapeHTML(s.type || '学校')}</span>
+    </div>
+
+    <div class="school-info" style="background:var(--gray-50);padding:12px;border-radius:8px">
+      ${(() => { const ls = Array.isArray(s.languages) ? s.languages : (s.language ? [s.language] : []); return ls.length ? `<div class="school-info-row"><span class="ic">🗣️</span>${ls.map(l => `<span class="lang-tag">${escapeHTML(l)}</span>`).join(' ')}</div>` : ''; })()}
+      ${s.address ? `<div class="school-info-row"><span class="ic">📍</span>${escapeHTML(s.address)}</div>` : ''}
+      ${s.contact ? `<div class="school-info-row"><span class="ic">👤</span>${escapeHTML(s.contact)}</div>` : ''}
+      ${s.phone ? `<div class="school-info-row"><span class="ic">📞</span><a href="tel:${escapeHTML(s.phone)}" style="color:var(--primary);text-decoration:none">${escapeHTML(s.phone)}</a></div>` : ''}
+      ${(s.applyStart || s.applyDate) ? (() => {
+        const a = s.applyStart || s.applyDate;
+        const b = s.applyEnd || (s.applyStart ? '' : s.applyDate);
+        const text = (a && b && a !== b) ? `${a} → ${b}` : (a || b);
+        return `<div class="school-info-row"><span class="ic">📅</span>报名时间：${escapeHTML(text)}</div>`;
+      })() : ''}
+      ${s.tuition ? `<div class="school-info-row"><span class="ic">💰</span>学费：¥${s.tuition}/月</div>` : ''}
+      ${s.distance ? `<div class="school-info-row"><span class="ic">🚗</span>距离：${s.distance} km</div>` : ''}
+    </div>
+
+    ${s.notes ? `<div style="margin-top:12px;padding:10px 12px;background:#fff8e1;border-radius:8px;font-size:14px;color:var(--gray-700);white-space:pre-wrap"><strong style="color:var(--warning)">备注：</strong>${escapeHTML(s.notes)}</div>` : ''}
+
+    <div class="section-title">
+      <span>📅 重要事项 / 提醒</span>
+      <span style="font-size:11px;color:var(--gray-400);font-weight:normal;text-transform:none;letter-spacing:0">${ev.length} 项</span>
+    </div>
+    <div class="timeline">
+      ${ev.length ? ev.map((e, idx) => {
+        const d = e.date ? new Date(e.date) : null;
+        const diff = d ? Math.round((d - today) / 86400000) : null;
+        const tag = diff !== null ? (diff === 0 ? '<span style="color:var(--danger);font-weight:600">今天</span>' : diff > 0 ? `${diff} 天后` : `${-diff} 天前`) : '';
+        return `
+          <div class="timeline-item" style="border-left-color:${diff !== null && diff >= 0 && diff <= 7 ? 'var(--warning)' : 'var(--gray-300)'}">
+            <div class="timeline-item-header">
+              <div>
+                <span class="timeline-date">${escapeHTML(e.date || '未排期')}</span>
+                <span style="margin-left:6px;font-size:12px;color:var(--gray-500)">${tag}</span>
+              </div>
+              <button class="timeline-remove" data-remove-event="${idx}" title="删除">×</button>
+            </div>
+            <div style="font-weight:600;margin:2px 0">${escapeHTML(e.title || '(未命名)')}</div>
+            ${e.note ? `<div class="timeline-content">${escapeHTML(e.note)}</div>` : ''}
+          </div>
+        `;
+      }).join('') : '<div style="color:var(--gray-400);font-size:13px;text-align:center;padding:10px">暂无事项</div>'}
+    </div>
+    <div class="add-feedback-form">
+      <div style="font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:8px">+ 添加事项</div>
+      <div class="form-row">
+        <div class="form-group" style="margin:0">
+          <input class="form-input" id="evDate" type="date" />
+        </div>
+        <div class="form-group" style="margin:0">
+          <input class="form-input" id="evTitle" placeholder="事项，如：面试" />
+        </div>
+      </div>
+      <textarea class="form-textarea" id="evNote" placeholder="备注（可选）" style="min-height:50px"></textarea>
+      <button class="btn btn-primary" id="addEventBtn" style="margin-top:6px;width:100%">添加事项</button>
+    </div>
+
+    <div class="section-title">
+      <span>💬 反馈记录</span>
+      <span style="font-size:11px;color:var(--gray-400);font-weight:normal;text-transform:none;letter-spacing:0">${fb.length} 条</span>
+    </div>
+    <div class="timeline">
+      ${fb.length ? fb.map((f, idx) => `
+        <div class="timeline-item">
+          <div class="timeline-item-header">
+            <div>
+              <span class="timeline-date">${escapeHTML(f.date || '')}</span>
+              ${f.method ? `<span class="timeline-method" style="margin-left:6px">${escapeHTML(f.method)}</span>` : ''}
+            </div>
+            <button class="timeline-remove" data-remove-fb="${idx}" title="删除">×</button>
+          </div>
+          <div class="timeline-content">${escapeHTML(f.content || '')}</div>
+        </div>
+      `).join('') : '<div style="color:var(--gray-400);font-size:13px;text-align:center;padding:10px">还没有反馈记录</div>'}
+    </div>
+    <div class="add-feedback-form">
+      <div style="font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:8px">+ 添加反馈</div>
+      <div class="form-row">
+        <div class="form-group" style="margin:0">
+          <input class="form-input" id="fbDate" type="date" />
+        </div>
+        <div class="form-group" style="margin:0">
+          <select class="form-select" id="fbMethod">
+            <option value="电话">📞 电话</option>
+            <option value="邮件">📧 邮件</option>
+            <option value="到访">🏫 到访</option>
+            <option value="微信">💬 微信</option>
+            <option value="其他">📝 其他</option>
+          </select>
+        </div>
+      </div>
+      <textarea class="form-textarea" id="fbContent" placeholder="反馈内容..."></textarea>
+      <button class="btn btn-primary" id="addFbBtn" style="margin-top:6px;width:100%">添加反馈</button>
+    </div>
+  `;
+
+  // Wire up actions
+  document.getElementById('addEventBtn').onclick = () => {
+    const date = document.getElementById('evDate').value;
+    const title = document.getElementById('evTitle').value.trim();
+    const note = document.getElementById('evNote').value.trim();
+    if (!date || !title) { toast('请填写日期和事项', 'error'); return; }
+    const school = state.data.schools.find(x => x.id === detailId);
+    school.events = school.events || [];
+    school.events.push({ id: uid(), date, title, note });
+    saveData(state.data);
+    renderDetail();
+    render();
+    toast('已添加事项', 'success');
+  };
+  document.getElementById('addFbBtn').onclick = () => {
+    const date = document.getElementById('fbDate').value;
+    const method = document.getElementById('fbMethod').value;
+    const content = document.getElementById('fbContent').value.trim();
+    if (!content) { toast('请填写反馈内容', 'error'); return; }
+    const school = state.data.schools.find(x => x.id === detailId);
+    school.feedbacks = school.feedbacks || [];
+    school.feedbacks.push({ id: uid(), date: date || new Date().toISOString().slice(0,10), method, content });
+    saveData(state.data);
+    renderDetail();
+    render();
+    toast('已添加反馈', 'success');
+  };
+  document.querySelectorAll('[data-remove-event]').forEach(el => {
+    el.onclick = (e) => {
+      e.stopPropagation();
+      const i = Number(el.dataset.removeEvent);
+      const school = state.data.schools.find(x => x.id === detailId);
+      school.events.splice(i, 1);
+      saveData(state.data);
+      renderDetail();
+      render();
+    };
+  });
+  document.querySelectorAll('[data-remove-fb]').forEach(el => {
+    el.onclick = (e) => {
+      e.stopPropagation();
+      const i = Number(el.dataset.removeFb);
+      const school = state.data.schools.find(x => x.id === detailId);
+      school.feedbacks.splice(i, 1);
+      saveData(state.data);
+      renderDetail();
+      render();
+    };
+  });
+}
+
+/* ================== Profile Modal ================== */
+function openProfileModal() {
+  const p = state.data.profile || emptyProfile();
+  document.getElementById('pName').value = p.name || '';
+  document.getElementById('pGender').value = p.gender || '';
+  document.getElementById('pDob').value = p.dob || '';
+  renderProfileRows();
+  document.getElementById('profileModal').classList.add('show');
+}
+
+function onEnrollChange(e) {
+  // 局部更新：仅重算所有行的年龄显示，不重渲整个列表（避免 input 失焦/被打断）
+  const p = state.data.profile || emptyProfile();
+  const dob = document.getElementById('pDob').value || p.dob;
+  document.querySelectorAll('.p-enroll').forEach(inp => {
+    const age = calcAgeAtEnrollment(dob, inp.value);
+    const cell = inp.parentElement.querySelector('.row-age');
+    if (age && age.valid) {
+      cell.innerHTML = `<span class="age-num">${age.decimal}岁</span>${inp.value ? `<span class="age-date">${escapeHTML(inp.value)}</span>` : ''}`;
+      cell.classList.add('has');
+    } else {
+      cell.textContent = '—';
+      cell.classList.remove('has');
+    }
+    // 整行视觉：已填值的行加底色，方便扫读
+    if (inp.value) {
+      inp.parentElement.classList.add('has-value');
+    } else {
+      inp.parentElement.classList.remove('has-value');
+    }
+  });
+  // 顶部"已填 N/M"实时更新
+  const filled = Array.from(document.querySelectorAll('.p-enroll')).filter(i => i.value).length;
+  const sumEl = document.getElementById('pProfileSummary');
+  if (sumEl) sumEl.textContent = `已填 ${filled}/${ENROLL_LEVELS.length}`;
+}
+
+function renderProfileRows() {
+  const p = state.data.profile || emptyProfile();
+  const dob = document.getElementById('pDob').value || p.dob;
+  // 先从当前 DOM 中读取所有 .p-enroll 的最新值，避免用户选完后被旧值覆盖
+  const liveEnrollments = {};
+  document.querySelectorAll('.p-enroll').forEach(inp => {
+    if (inp.value) liveEnrollments[inp.dataset.key] = inp.value;
+  });
+  const merged = Object.assign({}, p.enrollments || {}, liveEnrollments);
+
+  document.getElementById('pEnrollRows').innerHTML = ENROLL_LEVELS.map(lv => {
+    const val = merged[lv.key] || '';
+    const age = calcAgeAtEnrollment(dob, val);
+    const dateText = val ? val : '';
+    return `
+      <div class="profile-row ${val ? 'has-value' : ''}" data-level="${lv.key}">
+        <div class="row-label" title="${escapeHTML(lv.desc)}">${escapeHTML(lv.label)}</div>
+        <input type="month" class="form-input row-input p-enroll" data-key="${lv.key}" value="${val}" />
+        <div class="row-age ${age && age.valid ? 'has' : ''}">
+          <span class="age-num">${age && age.valid ? `${age.decimal}岁` : '—'}</span>
+          ${dateText ? `<span class="age-date">${escapeHTML(dateText)}</span>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // 重新绑定 change 事件（每次重渲都要重绑）
+  document.querySelectorAll('.p-enroll').forEach(inp => {
+    inp.addEventListener('change', onEnrollChange);
+    inp.addEventListener('input', onEnrollChange);
+  });
+
+  // live "current age"
+  const ageNow = document.getElementById('pAgeNow');
+  if (dob) {
+    const dobParts = dob.split('-').map(Number);
+    if (dobParts.length === 3 && dobParts[0] && dobParts[1] && dobParts[2]) {
+      const [dy, dm, dd] = dobParts;
+      const now = new Date();
+      const daysDiff = Math.round((Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) - Date.UTC(dy, dm - 1, dd)) / 86400000);
+      if (daysDiff < 0) {
+        ageNow.innerHTML = '<span style="color:var(--danger)">⚠ 出生日期晚于今天</span>';
+      } else {
+        const years = Math.round((daysDiff / 365.25) * 10) / 10;
+        ageNow.innerHTML = `当前实际年龄：<strong style="color:var(--primary)">${years}岁</strong>（${daysDiff} 天）`;
+      }
+    } else {
+      ageNow.textContent = '';
+    }
+  } else {
+    ageNow.textContent = '';
+  }
+
+  // Summary — 从当前 DOM 读，更实时
+  const filled = Array.from(document.querySelectorAll('.p-enroll')).filter(i => i.value).length;
+  document.getElementById('pProfileSummary').textContent = `已填 ${filled}/${ENROLL_LEVELS.length}`;
+}
+
+function saveProfile() {
+  const profile = {
+    name: document.getElementById('pName').value.trim(),
+    gender: document.getElementById('pGender').value,
+    dob: document.getElementById('pDob').value,
+    enrollments: {},
+  };
+  document.querySelectorAll('.p-enroll').forEach(inp => {
+    const v = inp.value;
+    if (v) profile.enrollments[inp.dataset.key] = v;
+  });
+  state.data.profile = profile;
+  document.getElementById('profileModal').classList.remove('show');
+  render();
+  toast('已保存宝宝信息', 'success');
+}
+
+/* ================== Import / Export ================== */
+function exportData() {
+  const data = JSON.stringify(state.data, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `school-tracker-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('已导出', 'success');
+}
+function importData(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.schools || !Array.isArray(data.schools)) throw new Error('格式错误');
+      if (state.data.schools.length && !confirm(`已有 ${state.data.schools.length} 条记录，导入将覆盖现有数据。继续？`)) return;
+      state.data = data;
+      state.filter = 'all';
+      state.search = '';
+      document.getElementById('searchInput').value = '';
+      render();
+      toast(`已导入 ${data.schools.length} 条记录`, 'success');
+    } catch (err) {
+      toast('文件格式不正确', 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ================== UI Helpers ================== */
+let toastTimer = null;
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+function showConfirm(message, onOk) {
+  const overlay = document.getElementById('confirmOverlay');
+  document.getElementById('confirmBody').textContent = message;
+  const okBtn = document.getElementById('confirmOk');
+  const cancelBtn = document.getElementById('confirmCancel');
+  const close = () => overlay.classList.remove('show');
+  okBtn.onclick = () => { close(); onOk && onOk(); };
+  cancelBtn.onclick = close;
+  overlay.classList.add('show');
+}
+
+/* ================== Wire up ================== */
+document.getElementById('addBtn').onclick = () => openSchoolModal();
+document.getElementById('fab').onclick = () => openSchoolModal();
+document.getElementById('saveBtn').onclick = saveSchool;
+document.getElementById('deleteBtn').onclick = deleteSchool;
+document.getElementById('editDetailBtn').onclick = () => {
+  const id = detailId;  // 先抓住 id，再关弹层（关闭时 detailId 会被置空）
+  closeDetailModal();
+  if (id) openSchoolModal(id);
+};
+document.getElementById('exportBtn').onclick = exportData;
+document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
+document.getElementById('importFile').onchange = e => { if (e.target.files[0]) importData(e.target.files[0]); e.target.value = ''; };
+
+// Profile
+document.getElementById('profileCard').onclick = openProfileModal;
+document.getElementById('pSaveBtn').onclick = saveProfile;
+document.getElementById('pDob').oninput = renderProfileRows;
+
+// K1 reference — fold/unfold
+document.getElementById('k1Toggle').onclick = (e) => {
+  e.stopPropagation();
+  const card = document.getElementById('k1Card');
+  const body = document.getElementById('k1Body');
+  const open = card.classList.toggle('open');
+  body.style.display = open ? 'block' : 'none';
+};
+document.querySelector('.k1-header').onclick = () => document.getElementById('k1Toggle').click();
+
+document.getElementById('searchInput').oninput = e => { state.search = e.target.value; renderList(); };
+
+document.querySelectorAll('[data-close]').forEach(el => {
+  el.onclick = () => {
+    const id = el.dataset.close;
+    document.getElementById(id).classList.remove('show');
+    if (id === 'detailModal') detailId = null;
+  };
+});
+// close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) {
+      overlay.classList.remove('show');
+      if (overlay.id === 'detailModal') detailId = null;
+    }
+  });
+});
+
+// Date label
+const today = new Date();
+const week = ['日','一','二','三','四','五','六'][today.getDay()];
+document.getElementById('todayLabel').textContent = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')} 周${week}`;
+
+// First render
+render();
+</script>
+</body>
+</script>
+
+<!-- Install-helper modal -->
+<div class="modal-overlay" id="installModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>📲 添加到主屏幕</h2>
+      <button class="close-btn" data-close="installModal" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="installAlreadyDone" style="display:none" class="install-hero">
+        <div class="install-hero-emoji">✅</div>
+        <div>
+          <div class="install-hero-title">已经安装到主屏幕啦</div>
+          <div class="install-hero-sub">下次直接从桌面图标打开即可，无需浏览器</div>
+        </div>
+      </div>
+
+      <div class="install-hero">
+        <div class="install-hero-emoji">🎒</div>
+        <div>
+          <div class="install-hero-title">把「屁宝学业生涯」装进手机</div>
+          <div class="install-hero-sub">装好后从桌面打开，像 App 一样使用</div>
+        </div>
+      </div>
+
+      <div class="install-tabs">
+        <div class="install-tab" data-tab="ios">📱 iPhone / iPad</div>
+        <div class="install-tab" data-tab="android">🤖 Android</div>
+      </div>
+
+      <div class="install-steps" data-tab="ios">
+        <div class="install-step">
+          <div class="install-step-num">1</div>
+          <div class="install-step-text">用 <strong>Safari 浏览器</strong>打开本页面（不要用微信/QQ 内置浏览器）</div>
+        </div>
+        <div class="install-step">
+          <div class="install-step-num">2</div>
+          <div class="install-step-text">点击底部的 <span class="install-step-img">⤴ 分享</span> 按钮</div>
+        </div>
+        <div class="install-step">
+          <div class="install-step-num">3</div>
+          <div class="install-step-text">在弹出菜单里选择 <strong>「添加到主屏幕」</strong> <span class="install-step-img">➕</span></div>
+        </div>
+        <div class="install-step">
+          <div class="install-step-num">4</div>
+          <div class="install-step-text">确认名称 <strong>「屁宝学业生涯」</strong>，点击右上角 <strong>「添加」</strong></div>
+        </div>
+        <div class="install-tip">💡 添加后桌面会出现 🎒 图标，从那里打开就是独立 App 模式，浏览器地址栏会消失，体验更干净。</div>
+      </div>
+
+      <div class="install-steps" data-tab="android">
+        <div class="install-step">
+          <div class="install-step-num">1</div>
+          <div class="install-step-text">用 <strong>Chrome 浏览器</strong>打开本页面</div>
+        </div>
+        <div class="install-step">
+          <div class="install-step-num">2</div>
+          <div class="install-step-text">点击右上角菜单 <span class="install-step-img">⋮</span>，选择 <strong>「添加到主屏幕」</strong> 或 <strong>「安装应用」</strong></div>
+        </div>
+        <div class="install-step">
+          <div class="install-step-num">3</div>
+          <div class="install-step-text">确认名称 <strong>「屁宝学业生涯」</strong>，点击 <strong>「添加」</strong></div>
+        </div>
+        <div class="install-tip">💡 如果浏览器弹出了"安装 App"的横幅，直接点 <strong>安装</strong> 即可，更快。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Android Chrome auto install banner -->
+<div class="pwa-banner" id="pwaBanner">
+  <div class="pwa-banner-icon">🎒</div>
+  <div class="pwa-banner-text">
+    <strong>安装到主屏幕</strong>
+    随时打开，像 App 一样使用
+  </div>
+  <div class="pwa-banner-actions">
+    <button class="pwa-banner-btn primary" id="pwaInstallBtn">安装</button>
+    <button class="pwa-banner-btn ghost" id="pwaDismissBtn">稍后</button>
+  </div>
+</div>
+
+<!-- Cloud sync settings modal -->
+<div class="modal-overlay" id="syncModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>☁ 云同步设置</h2>
+      <button class="close-btn" data-close="syncModal" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="sync-status-row">
+        <span class="dot" id="syncStatusDot"></span>
+        <div style="flex:1">
+          <div class="label" id="syncStatusLabel">本地</div>
+          <div class="meta" id="syncStatusMeta">未配置云端，所有数据只保存在本设备</div>
+        </div>
+        <button class="btn btn-secondary" id="syncNowBtn" style="padding:6px 12px;font-size:12px">立即同步</button>
+      </div>
+
+      <p style="margin:0 0 8px;font-size:13px;color:var(--gray-600);line-height:1.5">
+        填入 LeanCloud 凭证后，手机和电脑打开页面会自动拉到同一份数据。
+      </p>
+
+      <div class="sync-field">
+        <label>App ID</label>
+        <input type="text" id="syncAppId" placeholder="LeanCloud 控制台 → 设置 → 应用凭证" autocomplete="off" />
+      </div>
+      <div class="sync-field">
+        <label>App Key</label>
+        <input type="text" id="syncAppKey" placeholder="同上" autocomplete="off" />
+      </div>
+      <div class="sync-field">
+        <label>服务器地址（可选）</label>
+        <input type="text" id="syncServerUrl" placeholder="国际版留空；国内版填 https://你的-app.tablet.leancloud.app" autocomplete="off" />
+      </div>
+
+      <div class="sync-actions">
+        <button class="btn btn-primary" id="syncSaveBtn">保存并启用</button>
+        <button class="btn btn-secondary" id="syncClearBtn">清除云同步</button>
+      </div>
+
+      <div class="sync-tip">
+        💡 <strong>没注册过 LeanCloud？</strong>去 <a href="https://console.leancloud.app/" target="_blank" rel="noopener">console.leancloud.app</a> 注册账号 → 创建应用 → 设置 → 复制 AppID / AppKey → 填到上面。免费层有 1GB 存储 / 3 万次请求/日，家庭记录完全够用。<br><br>
+        数据保存在 LeanCloud 的 <code>SchoolTracker</code> 表中，第一个启用同步的设备会在云端创建一个对象，凭证只存在你本机浏览器 localStorage 里。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================== PWA install helpers ================== */
+let deferredInstallPrompt = null;
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                  || window.navigator.standalone === true;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const banner = document.getElementById('pwaBanner');
+  if (banner && !sessionStorage.getItem('pwaBannerDismissed')) {
+    setTimeout(() => banner.classList.add('show'), 1500);
+  }
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  const banner = document.getElementById('pwaBanner');
+  if (banner) banner.classList.remove('show');
+  if (typeof toast === 'function') toast('已添加到主屏幕 🎉', 'success');
+});
+
+function detectOS() {
+  const ua = navigator.userAgent || '';
+  if (/iPhone|iPad|iPod/i.test(ua)) return 'ios';
+  if (/Android/i.test(ua)) return 'android';
+  return 'other';
+}
+
+function activateInstallTab(name) {
+  document.querySelectorAll('.install-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === name);
+  });
+  document.querySelectorAll('.install-steps').forEach(s => {
+    s.classList.toggle('active', s.dataset.tab === name);
+  });
+}
+
+function openInstallModal() {
+  const overlay = document.getElementById('installModal');
+  if (!overlay) return;
+  const alreadyInstalled = document.getElementById('installAlreadyDone');
+  const iOSTab = document.querySelector('.install-tab[data-tab="ios"]');
+  const androidTab = document.querySelector('.install-tab[data-tab="android"]');
+  if (alreadyInstalled) alreadyInstalled.style.display = 'none';
+
+  if (isStandalone) {
+    if (alreadyInstalled) alreadyInstalled.style.display = 'block';
+    if (iOSTab) iOSTab.style.display = 'none';
+    if (androidTab) androidTab.style.display = 'none';
+    document.querySelectorAll('.install-steps').forEach(s => s.classList.remove('active'));
+  } else {
+    if (iOSTab) iOSTab.style.display = '';
+    if (androidTab) androidTab.style.display = '';
+    const platform = detectOS();
+    if (platform === 'ios') activateInstallTab('ios');
+    else if (platform === 'android') activateInstallTab('android');
+    else activateInstallTab('ios');
+  }
+  overlay.classList.add('show');
+}
+
+const installBtn = document.getElementById('installBtn');
+if (installBtn) installBtn.onclick = openInstallModal;
+
+document.addEventListener('click', (e) => {
+  if (!e.target) return;
+  if (e.target.id === 'pwaInstallBtn') {
+    const banner = document.getElementById('pwaBanner');
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      deferredInstallPrompt.userChoice.then(() => {
+        deferredInstallPrompt = null;
+        if (banner) banner.classList.remove('show');
+      });
+    } else {
+      openInstallModal();
+    }
+  }
+  if (e.target.id === 'pwaDismissBtn') {
+    const banner = document.getElementById('pwaBanner');
+    if (banner) banner.classList.remove('show');
+    sessionStorage.setItem('pwaBannerDismissed', '1');
+  }
+});
+
+document.querySelectorAll('.install-tab').forEach(t => {
+  t.addEventListener('click', () => activateInstallTab(t.dataset.tab));
+});
+
+// Re-bind data-close handlers so the installModal close button works
+document.querySelectorAll('[data-close="installModal"]').forEach(el => {
+  el.addEventListener('click', () => {
+    document.getElementById('installModal').classList.remove('show');
+  });
+});
+// Click-outside-to-close for the install modal
+const installOverlay = document.getElementById('installModal');
+if (installOverlay) {
+  installOverlay.addEventListener('click', e => {
+    if (e.target === installOverlay) installOverlay.classList.remove('show');
+  });
+}
+
+if (isStandalone) {
+  const btn = document.getElementById('installBtn');
+  if (btn) btn.style.display = 'none';
+}
+
+/* ================== Sync modal wiring ================== */
+function openSyncModal() {
+  const cfg = getSyncCfg();
+  document.getElementById('syncAppId').value = cfg.appId || '';
+  document.getElementById('syncAppKey').value = cfg.appKey || '';
+  document.getElementById('syncServerUrl').value = cfg.serverURL || '';
+  updateSyncStatusUI();
+  document.getElementById('syncModal').classList.add('show');
+}
+function updateSyncStatusUI() {
+  const map = {
+    local:    { label: '本地',     meta: '未配置云端，所有数据只保存在本设备' },
+    syncing:  { label: '同步中…', meta: '正在与云端交换数据' },
+    synced:   { label: '已同步',   meta: '手机和电脑看到的都是同一份数据' },
+    offline:  { label: '离线',     meta: '网络不可用，将仅保存在本地' },
+    error:    { label: '同步失败', meta: syncMessage || '请检查网络或凭证' },
+  };
+  const s = map[syncStatus] || map.local;
+  const dot = document.getElementById('syncStatusDot');
+  const label = document.getElementById('syncStatusLabel');
+  const meta = document.getElementById('syncStatusMeta');
+  if (dot) {
+    dot.className = 'dot';
+    if (syncStatus !== 'local') dot.classList.add(syncStatus);
+  }
+  if (label) label.textContent = s.label;
+  if (meta) meta.textContent = s.meta;
+}
+const _origSetSyncIndicator = setSyncIndicator;
+setSyncIndicator = function() { _origSetSyncIndicator(); updateSyncStatusUI(); };
+
+const syncBtn = document.getElementById('syncBtn');
+if (syncBtn) syncBtn.onclick = openSyncModal;
+
+const syncSaveBtn = document.getElementById('syncSaveBtn');
+if (syncSaveBtn) {
+  syncSaveBtn.onclick = async () => {
+    const cfg = {
+      appId:    document.getElementById('syncAppId').value.trim(),
+      appKey:   document.getElementById('syncAppKey').value.trim(),
+      serverURL:document.getElementById('syncServerUrl').value.trim(),
+      objectId: getSyncCfg().objectId || undefined,
+    };
+    if (!cfg.appId || !cfg.appKey) { toast('请填写 AppID 和 AppKey', 'error'); return; }
+    setSyncCfg(cfg);
+    lcInited = false; lcObject = null;
+    bootstrapSync().then(() => {
+      if (syncStatus === 'synced' || syncStatus === 'error') toast(
+        syncStatus === 'synced' ? '已连接到云端' : '连接失败，请检查凭证',
+        syncStatus === 'synced' ? 'success' : 'error'
+      );
+    });
+  };
+}
+const syncClearBtn = document.getElementById('syncClearBtn');
+if (syncClearBtn) {
+  syncClearBtn.onclick = () => {
+    showConfirm('清除后所有设备将不再自动同步（云端数据不会删除）。确定？', () => {
+      setSyncCfg({});
+      syncStatus = 'local'; syncMessage = '';
+      setSyncIndicator();
+      toast('已关闭云同步', 'success');
+    });
+  };
+}
+const syncNowBtn = document.getElementById('syncNowBtn');
+if (syncNowBtn) {
+  syncNowBtn.onclick = async () => {
+    if (!lcInited) { openSyncModal(); return; }
+    syncStatus = 'syncing'; setSyncIndicator();
+    try {
+      const cloudData = await pullFromCloud();
+      if (cloudData) {
+        state.data = mergeData(cloudData, state.data);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
+        render();
+      }
+      await pushToCloud(state.data);
+      syncStatus = 'synced'; syncMessage = '';
+    } catch (e) {
+      syncStatus = 'error'; syncMessage = e.message || '网络错误';
+    }
+    setSyncIndicator();
+    toast(syncStatus === 'synced' ? '已同步' : '同步失败', syncStatus === 'synced' ? 'success' : 'error');
+  };
+}
+
+// 首次进入：尝试拉取云端
+bootstrapSync();
+</script>
+</html>
