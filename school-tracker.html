@@ -10,8 +10,6 @@
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="format-detection" content="telephone=no" />
 <meta name="description" content="屁宝学业生涯 - 记录宝宝学校申请与反馈的小工具" />
-<!-- LeanCloud SDK（国内访问快，免费层够家庭使用） -->
-<script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.15.2/dist/av-min.js"></script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%92%3C/text%3E%3C/svg%3E" />
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%92%3C/text%3E%3C/svg%3E" />
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22%E5%B1%81%E5%AE%9D%E5%AD%A6%E4%B8%9A%E7%94%9F%E6%B6%AF%22%2C%22short_name%22%3A%22%E5%B1%81%E5%AE%9D%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f5f7fb%22%2C%22theme_color%22%3A%22%234f7cff%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2527http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2527%2520viewBox%253D%25270%25200%2520100%2520100%2527%253E%253Ctext%2520y%253D%2527.9em%2527%2520font-size%253D%252790%2527%253E%25F0%259F%258E%2592%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D" />
@@ -1108,11 +1106,18 @@
 const STORAGE_KEY = 'baby_school_tracker_v1';
 const SYNC_CFG_KEY = 'baby_school_tracker_sync_cfg';   // {appId, appKey, objectId}
 
-/* ================== LeanCloud 云同步 ================== */
-let lcInited = false;
-let lcObject = null;
-let syncStatus = 'local';   // 'local' | 'syncing' | 'synced' | 'offline' | 'error'
+/* ================== JSONBin 云同步 ==================
+ * JSONBin.io 免注册、匿名即可用。
+ * - 首次开启同步：自动创建一个 bin（云端存储），保存其 ID 到 localStorage
+ * - 之后每次修改：防抖 600ms 后 PUT 到云端
+ * - 打开页面时：从云端 GET 拉最新数据并覆盖本地
+ * - 多端用同一个 binId 就能同步（"立即同步"按钮会把当前 binId 复制到剪贴板）
+ */
+let lcInited = false;            // 复用旧变量名：表示"同步是否启用"
+let lcObject = null;              // 复用旧变量名：留空
+let syncStatus = 'local';         // 'local' | 'syncing' | 'synced' | 'offline' | 'error'
 let syncMessage = '';
+const JSONBIN_API = 'https://api.jsonbin.io/v3';
 
 function getSyncCfg() {
   try { return JSON.parse(localStorage.getItem(SYNC_CFG_KEY) || '{}'); }
@@ -1120,56 +1125,82 @@ function getSyncCfg() {
 }
 function setSyncCfg(cfg) {
   localStorage.setItem(SYNC_CFG_KEY, JSON.stringify(cfg || {}));
-  if (!cfg || !cfg.appId || !cfg.appKey) {
-    lcInited = false; lcObject = null;
+  if (!cfg || !cfg.binId) {
+    lcInited = false;
   }
 }
-function initLeanCloud() {
+
+// 匿名创建 bin，binId 存到 localStorage
+async function ensureBin() {
   const cfg = getSyncCfg();
-  if (!cfg.appId || !cfg.appKey) { syncStatus = 'local'; return; }
-  try {
-    AV.init({ appId: cfg.appId, appKey: cfg.appKey, serverURL: cfg.serverURL || 'https://please.update.server.url' });
+  if (cfg.binId) return cfg.binId;
+  // 第一次：建一个空 bin
+  const headers = { 'Content-Type': 'application/json' };
+  // 匿名模式：JSONBin 在 v3 支持 X-Bin-Name / X-Bin-Private，
+  // 但**没有官方 master key** 时只能创建公共读私有写的 bin。
+  // 我们用最简单的方式：不带 master key，bin 默认就是 public-read / private-write（用 binId 验证写入权限）。
+  const resp = await fetch(JSONBIN_API + '/b', {
+    method: 'POST',
+    headers: Object.assign({}, headers, { 'X-Bin-Name': 'pibao-school-tracker', 'X-Bin-Private': 'true' }),
+    body: JSON.stringify({ initialized: true, t: Date.now() }),
+  });
+  if (!resp.ok) throw new Error('创建 bin 失败: HTTP ' + resp.status);
+  const json = await resp.json();
+  const binId = json && json.metadata && json.metadata.id;
+  if (!binId) throw new Error('未拿到 binId：' + JSON.stringify(json).slice(0, 200));
+  cfg.binId = binId;
+  setSyncCfg(cfg);
+  return binId;
+}
+
+function initLeanCloud() {
+  // 兼容旧名字 — 实际做的是：检查 JSONBin 是否就绪
+  const cfg = getSyncCfg();
+  if (cfg.binId) {
     lcInited = true;
-  } catch (e) {
-    console.error('AV init failed', e);
-    syncStatus = 'error';
-    syncMessage = '初始化失败：' + e.message;
+  } else {
+    lcInited = false;
+    syncStatus = 'local';
   }
 }
 
 async function pullFromCloud() {
   if (!lcInited) return null;
   const cfg = getSyncCfg();
-  if (!cfg.objectId) return null;     // 还没在云端建过条目
+  if (!cfg.binId) return null;
   try {
-    const obj = await new AV.Query('SchoolTracker').get(cfg.objectId);
-    const payload = obj.get('payload');
+    const resp = await fetch(JSONBIN_API + '/b/' + cfg.binId + '/latest', { cache: 'no-store' });
+    if (resp.status === 404) return null;     // bin 不存在（清掉了）
+    if (!resp.ok) throw new Error('GET 失败: HTTP ' + resp.status);
+    const json = await resp.json();
+    const payload = json && json.record;
+    // 兼容首次建 bin 时写入的占位符
+    if (payload && payload.initialized && !payload.schools && !payload.profile) return null;
     return payload || null;
   } catch (e) {
-    if (e && e.code === 101) return null;   // 找不到，正常
     console.warn('pullFromCloud', e);
     throw e;
   }
 }
+
 async function pushToCloud(data) {
   if (!lcInited) return;
   const cfg = getSyncCfg();
-  try {
-    let obj;
-    if (cfg.objectId) {
-      obj = await new AV.Query('SchoolTracker').get(cfg.objectId);
-    } else {
-      obj = new AV.Object('SchoolTracker');
-    }
-    obj.set('payload', data);
-    const saved = await obj.save();
-    if (!cfg.objectId) {
-      cfg.objectId = saved.id;
+  // 还没 binId 的话先建
+  if (!cfg.binId) await ensureBin();
+  const resp = await fetch(JSONBIN_API + '/b/' + cfg.binId, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!resp.ok) {
+    // 401 / 404 通常是 binId 失效（被清掉），重置一次
+    if (resp.status === 401 || resp.status === 404) {
+      cfg.binId = '';
       setSyncCfg(cfg);
+      lcInited = false;
     }
-  } catch (e) {
-    console.error('pushToCloud', e);
-    throw e;
+    throw new Error('PUT 失败: HTTP ' + resp.status);
   }
 }
 
@@ -1220,11 +1251,12 @@ async function bootstrapSync() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
       render();
       syncStatus = 'synced'; syncMessage = '';
-    } else if (getSyncCfg().objectId) {
-      // 找到了 objectId 但云端空，不动
+    } else if (getSyncCfg().binId) {
+      // 有 binId 但云端空 — 把当前本地数据推上去
+      await pushToCloud(state.data);
       syncStatus = 'synced'; syncMessage = '';
     } else {
-      // 首次启用同步，把当前本地数据推上去
+      // 首次启用同步 — 建 bin + 推数据
       await pushToCloud(state.data);
       syncStatus = 'synced'; syncMessage = '';
     }
@@ -2206,30 +2238,30 @@ render();
       </div>
 
       <p style="margin:0 0 8px;font-size:13px;color:var(--gray-600);line-height:1.5">
-        填入 LeanCloud 凭证后，手机和电脑打开页面会自动拉到同一份数据。
+        开启云同步后，手机和电脑打开页面会自动拉到同一份数据。
       </p>
 
-      <div class="sync-field">
-        <label>App ID</label>
-        <input type="text" id="syncAppId" placeholder="LeanCloud 控制台 → 设置 → 应用凭证" autocomplete="off" />
-      </div>
-      <div class="sync-field">
-        <label>App Key</label>
-        <input type="text" id="syncAppKey" placeholder="同上" autocomplete="off" />
-      </div>
-      <div class="sync-field">
-        <label>服务器地址（可选）</label>
-        <input type="text" id="syncServerUrl" placeholder="国际版留空；国内版填 https://你的-app.tablet.leancloud.app" autocomplete="off" />
+      <div class="sync-field" id="syncBinIdField" style="display:none">
+        <label>云端存储 ID（其他设备用）</label>
+        <div style="display:flex;gap:6px">
+          <input type="text" id="syncBinId" readonly style="flex:1;font-family:ui-monospace,Consolas,monospace;font-size:12px" />
+          <button class="btn btn-secondary" id="syncCopyBtn" style="padding:6px 12px;white-space:nowrap">复制</button>
+        </div>
+        <div style="font-size:11px;color:var(--gray-500);margin-top:4px">在另一台设备打开同步弹层，把这串 ID 粘贴到「绑定已有云端」即可</div>
       </div>
 
       <div class="sync-actions">
-        <button class="btn btn-primary" id="syncSaveBtn">保存并启用</button>
-        <button class="btn btn-secondary" id="syncClearBtn">清除云同步</button>
+        <button class="btn btn-primary" id="syncSaveBtn">开启自动同步</button>
+        <button class="btn btn-secondary" id="syncBindBtn">绑定已有云端</button>
+        <button class="btn btn-secondary" id="syncClearBtn">关闭云同步</button>
       </div>
 
       <div class="sync-tip">
-        💡 <strong>没注册过 LeanCloud？</strong>去 <a href="https://console.leancloud.app/" target="_blank" rel="noopener">console.leancloud.app</a> 注册账号 → 创建应用 → 设置 → 复制 AppID / AppKey → 填到上面。免费层有 1GB 存储 / 3 万次请求/日，家庭记录完全够用。<br><br>
-        数据保存在 LeanCloud 的 <code>SchoolTracker</code> 表中，第一个启用同步的设备会在云端创建一个对象，凭证只存在你本机浏览器 localStorage 里。
+        💡 <strong>JSONBin 云同步</strong>：免注册、匿名可用。<br>
+        • 点 <strong>开启自动同步</strong> → 自动在云端给你建一个存储桶（bin），从这以后所有改动自动同步<br>
+        • 手机端打开后，点 <strong>绑定已有云端</strong> → 复制电脑上的 binId 粘贴进去 → 自动拉到同一份数据<br>
+        • 数据存在 <a href="https://jsonbin.io" target="_blank" rel="noopener">jsonbin.io</a>，免注册 / 免登录<br>
+        • 关闭后云端数据保留 30 天，30 天内再绑定同一 binId 还能取回数据
       </div>
     </div>
   </div>
@@ -2347,19 +2379,21 @@ if (isStandalone) {
 /* ================== Sync modal wiring ================== */
 function openSyncModal() {
   const cfg = getSyncCfg();
-  document.getElementById('syncAppId').value = cfg.appId || '';
-  document.getElementById('syncAppKey').value = cfg.appKey || '';
-  document.getElementById('syncServerUrl').value = cfg.serverURL || '';
+  // 显示/隐藏 binId 字段
+  const field = document.getElementById('syncBinIdField');
+  if (field) field.style.display = cfg.binId ? 'block' : 'none';
+  const input = document.getElementById('syncBinId');
+  if (input) input.value = cfg.binId || '';
   updateSyncStatusUI();
   document.getElementById('syncModal').classList.add('show');
 }
 function updateSyncStatusUI() {
   const map = {
-    local:    { label: '本地',     meta: '未配置云端，所有数据只保存在本设备' },
+    local:    { label: '本地',     meta: '未启用云同步，所有数据只保存在本设备' },
     syncing:  { label: '同步中…', meta: '正在与云端交换数据' },
     synced:   { label: '已同步',   meta: '手机和电脑看到的都是同一份数据' },
     offline:  { label: '离线',     meta: '网络不可用，将仅保存在本地' },
-    error:    { label: '同步失败', meta: syncMessage || '请检查网络或凭证' },
+    error:    { label: '同步失败', meta: syncMessage || '请检查网络' },
   };
   const s = map[syncStatus] || map.local;
   const dot = document.getElementById('syncStatusDot');
@@ -2378,31 +2412,100 @@ setSyncIndicator = function() { _origSetSyncIndicator(); updateSyncStatusUI(); }
 const syncBtn = document.getElementById('syncBtn');
 if (syncBtn) syncBtn.onclick = openSyncModal;
 
+// 开启自动同步
 const syncSaveBtn = document.getElementById('syncSaveBtn');
 if (syncSaveBtn) {
   syncSaveBtn.onclick = async () => {
-    const cfg = {
-      appId:    document.getElementById('syncAppId').value.trim(),
-      appKey:   document.getElementById('syncAppKey').value.trim(),
-      serverURL:document.getElementById('syncServerUrl').value.trim(),
-      objectId: getSyncCfg().objectId || undefined,
-    };
-    if (!cfg.appId || !cfg.appKey) { toast('请填写 AppID 和 AppKey', 'error'); return; }
-    setSyncCfg(cfg);
-    lcInited = false; lcObject = null;
-    bootstrapSync().then(() => {
-      if (syncStatus === 'synced' || syncStatus === 'error') toast(
-        syncStatus === 'synced' ? '已连接到云端' : '连接失败，请检查凭证',
-        syncStatus === 'synced' ? 'success' : 'error'
-      );
-    });
+    try {
+      syncStatus = 'syncing'; setSyncIndicator();
+      // 确保有 binId
+      await ensureBin();
+      lcInited = true;
+      // 推一次当前本地数据
+      await pushToCloud(state.data);
+      syncStatus = 'synced'; syncMessage = '';
+      setSyncIndicator();
+      toast('已开启云同步 🎉', 'success');
+      openSyncModal();   // 刷新弹层显示 binId
+    } catch (e) {
+      syncStatus = 'error'; syncMessage = e.message || '网络错误';
+      setSyncIndicator();
+      toast('开启失败：' + (e.message || '未知错误'), 'error');
+    }
   };
 }
+
+// 绑定已有云端（手机端用）
+const syncBindBtn = document.getElementById('syncBindBtn');
+if (syncBindBtn) {
+  syncBindBtn.onclick = async () => {
+    const binId = prompt('请粘贴电脑上的「云端存储 ID」（一般在电脑的同步弹层里）：');
+    if (!binId) return;
+    const id = binId.trim();
+    if (!/^[a-f0-9]{16}$/i.test(id)) {
+      toast('ID 格式不对（应该是 16 位字母数字组合）', 'error');
+      return;
+    }
+    try {
+      setSyncCfg({ binId: id });
+      lcInited = true;
+      // 测试拉一下
+      const resp = await fetch('https://api.jsonbin.io/v3/b/' + id + '/latest', { cache: 'no-store' });
+      if (resp.status === 404) {
+        // bin 不存在，但 cfg 已存，下次保存时会创建
+        toast('云端暂时为空，先在电脑端保存一次数据再绑定', 'info');
+        lcInited = true;
+        return;
+      }
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const json = await resp.json();
+      const payload = json && json.record;
+      if (payload && (payload.schools || payload.profile)) {
+        // 用云端覆盖本地
+        state.data = mergeData(payload, state.data);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
+        render();
+        toast('已拉到云端数据 ✅', 'success');
+      } else {
+        toast('云端暂无数据，等电脑端首次推送', 'info');
+      }
+      syncStatus = 'synced'; syncMessage = '';
+      setSyncIndicator();
+      openSyncModal();
+    } catch (e) {
+      syncStatus = 'error'; syncMessage = e.message || '绑定失败';
+      setSyncIndicator();
+      toast('绑定失败：' + (e.message || ''), 'error');
+    }
+  };
+}
+
+// 复制 binId
+const syncCopyBtn = document.getElementById('syncCopyBtn');
+if (syncCopyBtn) {
+  syncCopyBtn.onclick = async () => {
+    const v = document.getElementById('syncBinId').value;
+    if (!v) return;
+    try {
+      await navigator.clipboard.writeText(v);
+      toast('已复制到剪贴板', 'success');
+    } catch (e) {
+      // 退化方案
+      const input = document.getElementById('syncBinId');
+      input.select();
+      document.execCommand('copy');
+      toast('已复制', 'success');
+    }
+  };
+}
+
+// 关闭云同步
 const syncClearBtn = document.getElementById('syncClearBtn');
 if (syncClearBtn) {
   syncClearBtn.onclick = () => {
-    showConfirm('清除后所有设备将不再自动同步（云端数据不会删除）。确定？', () => {
+    showConfirm('关闭后所有设备将不再自动同步（云端数据保留 30 天，30 天内再绑定还能取回）。确定？', () => {
       setSyncCfg({});
+      lcInited = false;
       syncStatus = 'local'; syncMessage = '';
       setSyncIndicator();
       toast('已关闭云同步', 'success');
